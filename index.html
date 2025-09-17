@@ -1,0 +1,1351 @@
+
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ระบบเช็คชื่อออนไลน์</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(45deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+            position: relative;
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        
+        .admin-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(255,255,255,0.2);
+            border: 2px solid white;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 14px;
+        }
+        
+        .admin-btn:hover {
+            background: rgba(255,255,255,0.3);
+        }
+        
+        .content {
+            padding: 30px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e1e5e9;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+        
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+            outline: none;
+            border-color: #4facfe;
+        }
+        
+        .btn {
+            background: linear-gradient(45deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: transform 0.2s;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+        
+        .btn.danger {
+            background: linear-gradient(45deg, #ff6b6b 0%, #ee5a52 100%);
+        }
+        
+        .btn.success {
+            background: linear-gradient(45deg, #51cf66 0%, #40c057 100%);
+        }
+        
+        .btn.warning {
+            background: linear-gradient(45deg, #ffd93d 0%, #ff6b35 100%);
+        }
+        
+        .btn.small {
+            padding: 6px 12px;
+            font-size: 14px;
+        }
+        
+        .attendance-control {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 12px;
+            margin: 20px 0;
+            text-align: center;
+        }
+        
+        .timer {
+            font-size: 2em;
+            font-weight: bold;
+            color: #4facfe;
+            margin: 15px 0;
+        }
+        
+        .timer.expired {
+            color: #ff6b6b;
+        }
+        
+        .checkin-button {
+            font-size: 1.5em;
+            padding: 20px 40px;
+            border-radius: 15px;
+            margin: 20px;
+        }
+        
+        .checkin-button:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .status-message {
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            font-weight: 600;
+        }
+        
+        .status-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .status-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .status-warning {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+        
+        .current-subject {
+            background: #e8f5e8;
+            border: 2px solid #28a745;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 20px 0;
+            text-align: center;
+        }
+        
+        .current-subject h3 {
+            color: #155724;
+            margin-bottom: 5px;
+        }
+        
+        .checkin-info {
+            font-size: 14px;
+            color: #666;
+            margin-top: 10px;
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        /* Admin Panel Styles */
+        .admin-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            z-index: 1000;
+            display: none;
+        }
+        
+        .admin-panel {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 1000px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        
+        .admin-login {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            max-width: 400px;
+            margin: 20px auto;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+        
+        .admin-login h3 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+        
+        .login-hint {
+            background: #e3f2fd;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 15px;
+            font-size: 14px;
+            color: #1565c0;
+        }
+        
+        .admin-header {
+            background: linear-gradient(45deg, #ff6b6b 0%, #ee5a52 100%);
+            color: white;
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .close-btn {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+        }
+        
+        .admin-content {
+            padding: 30px;
+        }
+        
+        .tabs {
+            display: flex;
+            background: #f8f9fa;
+            border-radius: 8px;
+            margin: 20px 0;
+            overflow: hidden;
+        }
+        
+        .tab {
+            flex: 1;
+            padding: 15px;
+            text-align: center;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 600;
+            color: #666;
+        }
+        
+        .tab.active {
+            background: #4facfe;
+            color: white;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .list-container {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 20px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        
+        .subject-item, .student-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            margin: 8px 0;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            border-left: 4px solid #4facfe;
+        }
+        
+        .subject-info, .student-info {
+            flex-grow: 1;
+        }
+        
+        .subject-name, .student-name {
+            font-weight: 600;
+            color: #333;
+            font-size: 16px;
+        }
+        
+        .subject-code, .student-number {
+            color: #666;
+            font-size: 14px;
+            margin-top: 5px;
+        }
+        
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        
+        .stat-number {
+            font-size: 1.8em;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .empty-state {
+            text-align: center;
+            color: #666;
+            padding: 40px;
+            font-style: italic;
+        }
+        
+        .attendance-status {
+            padding: 4px 12px;
+            border-radius: 15px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+        
+        .status-present {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .status-absent {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        .record-item {
+            background: white;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 10px 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            border-left: 4px solid #4facfe;
+        }
+        
+        .record-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .record-date {
+            font-weight: 600;
+            color: #4facfe;
+            font-size: 16px;
+        }
+        
+        .record-subject {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 8px;
+        }
+        
+        .student-record {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 5px 0;
+            border-bottom: 1px solid #e9ecef;
+            font-size: 14px;
+        }
+        
+        .student-record:last-child {
+            border-bottom: none;
+        }
+        
+        .attendance-summary {
+            background: #f8f9fa;
+            border-radius: 5px;
+            padding: 10px;
+        }
+        
+        .export-section {
+            text-align: center;
+            margin: 20px 0;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <button class="admin-btn" onclick="openAdminPanel()">🔧 จัดการระบบ</button>
+            <h1>📚 ระบบเช็คชื่อออนไลน์</h1>
+            <p>เช็คชื่อเข้าเรียนออนไลน์</p>
+        </div>
+        
+        <div class="content">
+            <div class="student-panel">
+                <h2>👨‍🎓 เช็คชื่อเข้าเรียน</h2>
+                
+                <div class="current-subject" id="currentSubject" style="display: none;">
+                    <h3 id="subjectName">-</h3>
+                    <p id="subjectCode">-</p>
+                </div>
+                
+                <div class="form-group">
+                    <label for="studentId">ชื่อนักศึกษาหรือรหัสนักศึกษา:</label>
+                    <input type="text" id="studentId" placeholder="กรอกชื่อ-นามสกุล หรือ รหัสนักศึกษา">
+                </div>
+                
+                <div class="attendance-control">
+                    <h3>การเช็คชื่อ</h3>
+                    <div class="timer" id="timer">การเช็คชื่อยังไม่เริ่ม</div>
+                    <button class="btn checkin-button" onclick="checkIn()" id="checkinBtn" disabled>
+                        ✋ เช็คชื่อเข้าเรียน
+                    </button>
+                    <div id="statusMessage"></div>
+                    <div class="checkin-info">
+                        💡 หมายเหตุ: คุณสามารถเช็คชื่อได้เพียงครั้งเดียวในแต่ละเซสชัน
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Admin Panel -->
+    <div class="admin-overlay" id="adminOverlay">
+        <div class="admin-panel">
+            <div id="adminLogin" class="admin-login">
+                <h3>🔐 เข้าสู่ระบบจัดการ</h3>
+                <p style="color: #666; margin-bottom: 20px;">สำหรับอาจารย์และผู้ดูแลระบบเท่านั้น</p>
+                
+                <div class="form-group">
+                    <label for="adminUsername">ชื่อผู้ใช้:</label>
+                    <input type="text" id="adminUsername" placeholder="กรอกชื่อผู้ใช้">
+                </div>
+                <div class="form-group">
+                    <label for="adminPassword">รหัสผ่าน:</label>
+                    <input type="password" id="adminPassword" placeholder="กรอกรหัสผ่าน">
+                </div>
+                <button class="btn" onclick="adminLogin()" style="width: 100%; margin-top: 15px;">
+                    🚀 เข้าสู่ระบบ
+                </button>
+                <button class="btn" onclick="closeAdminPanel()" style="width: 100%; margin-top: 10px; background: #6c757d;">
+                    ✖️ ยกเลิก
+                </button>
+                <div id="adminLoginMessage"></div>
+                
+                <div class="login-hint">
+                    <strong>สำหรับทดลองใช้:</strong><br>
+                    ชื่อผู้ใช้: <code>admin</code><br>
+                    รหัสผ่าน: <code>123456</code>
+                </div>
+            </div>
+            
+            <div id="adminContent" style="display: none;">
+                <div class="admin-header">
+                    <h2>🎓 ระบบจัดการสำหรับอาจารย์</h2>
+                    <button class="close-btn" onclick="adminLogout()">&times;</button>
+                </div>
+                
+                <div class="admin-content">
+                    <div class="tabs">
+                        <button class="tab active" onclick="switchAdminTab('subjects')">📖 จัดการวิชา</button>
+                        <button class="tab" onclick="switchAdminTab('students')">👥 จัดการนักศึกษา</button>
+                        <button class="tab" onclick="switchAdminTab('attendance')">✅ เช็คชื่อ</button>
+                        <button class="tab" onclick="switchAdminTab('records')">📊 ประวัติ</button>
+                    </div>
+                    
+                    <!-- Subjects Tab -->
+                    <div class="tab-content active" id="subjects-content">
+                        <h3>📖 จัดการวิชาเรียน</h3>
+                        <div class="form-group">
+                            <label for="subjectNameInput">ชื่อวิชา:</label>
+                            <input type="text" id="subjectNameInput" placeholder="เช่น คณิตศาสตร์พื้นฐาน">
+                        </div>
+                        <div class="form-group">
+                            <label for="subjectCodeInput">รหัสวิชา:</label>
+                            <input type="text" id="subjectCodeInput" placeholder="เช่น MATH101">
+                        </div>
+                        <div class="form-group">
+                            <label for="subjectDescInput">รายละเอียด:</label>
+                            <textarea id="subjectDescInput" placeholder="รายละเอียดของวิชา (ไม่จำเป็น)" rows="3"></textarea>
+                        </div>
+                        <button class="btn success" onclick="addSubject()">➕ เพิ่มวิชา</button>
+                        
+                        <div class="list-container">
+                            <h4>📚 รายการวิชาทั้งหมด</h4>
+                            <div id="subjectsList"></div>
+                        </div>
+                    </div>
+                    
+                    <!-- Students Tab -->
+                    <div class="tab-content" id="students-content">
+                        <h3>👥 จัดการนักศึกษา</h3>
+                        <div class="form-group">
+                            <label for="studentNameInput">ชื่อนักศึกษา:</label>
+                            <input type="text" id="studentNameInput" placeholder="ชื่อ-นามสกุล นักศึกษา">
+                        </div>
+                        <div class="form-group">
+                            <label for="studentNumberInput">รหัสนักศึกษา:</label>
+                            <input type="text" id="studentNumberInput" placeholder="เช่น 65001234">
+                        </div>
+                        <button class="btn success" onclick="addStudent()">➕ เพิ่มนักศึกษา</button>
+                        
+                        <div class="list-container">
+                            <h4>📋 รายชื่อนักศึกษา</h4>
+                            <div id="studentsList"></div>
+                        </div>
+                    </div>
+                    
+                    <!-- Attendance Tab -->
+                    <div class="tab-content" id="attendance-content">
+                        <h3>✅ ควบคุมการเช็คชื่อ</h3>
+                        
+                        <div class="form-group">
+                            <label for="selectSubject">เลือกวิชาสำหรับเช็คชื่อ:</label>
+                            <select id="selectSubject" onchange="selectSubject()">
+                                <option value="">-- เลือกวิชา --</option>
+                            </select>
+                        </div>
+                        
+                        <div class="current-subject" id="selectedSubject" style="display: none;">
+                            <h3 id="selectedSubjectName">-</h3>
+                            <p id="selectedSubjectCode">-</p>
+                        </div>
+                        
+                        <div class="attendance-control">
+                            <div class="form-group">
+                                <label for="duration">ระยะเวลาเช็คชื่อ (นาที):</label>
+                                <input type="number" id="duration" value="60" min="1" max="180">
+                            </div>
+                            <button class="btn success" onclick="startAttendance()" id="startBtn">🚀 เปิดการเช็คชื่อ</button>
+                            <button class="btn danger hidden" onclick="stopAttendance()" id="stopBtn">⏹️ ปิดการเช็คชื่อ</button>
+                            <div class="timer" id="adminTimer"></div>
+                        </div>
+                        
+                        <div class="stats">
+                            <div class="stat-card">
+                                <div class="stat-number" id="totalStudents">0</div>
+                                <div>นักศึกษาทั้งหมด</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-number" id="presentCount">0</div>
+                                <div>เข้าเรียน</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-number" id="absentCount">0</div>
+                                <div>ขาดเรียน</div>
+                            </div>
+                        </div>
+                        
+                        <div class="list-container">
+                            <h4>📋 สถานะการเช็คชื่อ</h4>
+                            <div id="attendanceStatus"></div>
+                        </div>
+                    </div>
+                    
+                    <!-- Records Tab -->
+                    <div class="tab-content" id="records-content">
+                        <h3>📊 ประวัติการเข้าเรียน</h3>
+                        
+                        <div class="form-group">
+                            <label for="recordSubject">กรองตามวิชา:</label>
+                            <select id="recordSubject" onchange="filterRecords()">
+                                <option value="">-- ทุกวิชา --</option>
+                            </select>
+                        </div>
+                        
+                        <div class="stats">
+                            <div class="stat-card">
+                                <div class="stat-number" id="totalSessions">0</div>
+                                <div>เซสชันทั้งหมด</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-number" id="avgAttendance">0%</div>
+                                <div>เปอร์เซ็นต์เข้าเรียนเฉลี่ย</div>
+                            </div>
+                        </div>
+                        
+                        <div class="list-container">
+                            <h4>📈 ประวัติการเช็คชื่อแต่ละวิชา</h4>
+                            <div id="attendanceRecords"></div>
+                        </div>
+                        
+                        <div class="export-section">
+                            <button class="btn warning" onclick="exportRecords()">📥 ส่งออกข้อมูล CSV</button>
+                            <button class="btn danger" onclick="clearAllRecords()">🗑️ ลบประวัติทั้งหมด</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let students = [];
+        let subjects = [];
+        let attendanceRecords = [];
+        let attendanceSession = null;
+        let timer = null;
+        let timeLeft = 0;
+        let sessionId = null;
+        let checkedInStudents = new Set();
+        let currentSubjectId = null;
+        let isAdminLoggedIn = false;
+        
+        const adminCredentials = {
+            'admin': '123456',
+            'teacher': 'password',
+            'อาจารย์': '123456'
+        };
+        
+        function openAdminPanel() {
+            document.getElementById('adminOverlay').style.display = 'block';
+            document.getElementById('adminLogin').style.display = 'block';
+            document.getElementById('adminContent').style.display = 'none';
+            isAdminLoggedIn = false;
+        }
+        
+        function closeAdminPanel() {
+            document.getElementById('adminOverlay').style.display = 'none';
+            document.getElementById('adminUsername').value = '';
+            document.getElementById('adminPassword').value = '';
+            document.getElementById('adminLoginMessage').innerHTML = '';
+        }
+        
+        function adminLogin() {
+            const username = document.getElementById('adminUsername').value.trim();
+            const password = document.getElementById('adminPassword').value.trim();
+            
+            if (!username || !password) {
+                showAdminMessage('กรุณากรอกชื่อผู้ใช้และรหัสผ่าน', 'error');
+                return;
+            }
+            
+            if (adminCredentials[username] && adminCredentials[username] === password) {
+                isAdminLoggedIn = true;
+                document.getElementById('adminLogin').style.display = 'none';
+                document.getElementById('adminContent').style.display = 'block';
+                
+                updateSubjectsList();
+                updateStudentsList();
+                updateSubjectSelects();
+                updateStats();
+                updateAttendanceStatus();
+                updateRecordsDisplay();
+                
+                document.getElementById('adminUsername').value = '';
+                document.getElementById('adminPassword').value = '';
+                document.getElementById('adminLoginMessage').innerHTML = '';
+            } else {
+                showAdminMessage('ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง', 'error');
+                document.getElementById('adminPassword').value = '';
+            }
+        }
+        
+        function adminLogout() {
+            isAdminLoggedIn = false;
+            closeAdminPanel();
+        }
+        
+        function showAdminMessage(message, type) {
+            const messageDiv = document.getElementById('adminLoginMessage');
+            messageDiv.innerHTML = `<div class="status-message status-${type}" style="margin-top: 15px;">${message}</div>`;
+            setTimeout(() => {
+                if (type === 'error') messageDiv.innerHTML = '';
+            }, 3000);
+        }
+        
+        function checkAdminAccess() {
+            if (!isAdminLoggedIn) {
+                alert('กรุณาเข้าสู่ระบบเพื่อใช้งานฟีเจอร์นี้');
+                return false;
+            }
+            return true;
+        }
+        
+        function switchAdminTab(tabName) {
+            if (!checkAdminAccess()) return;
+            
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            document.getElementById(tabName + '-content').classList.add('active');
+            event.target.classList.add('active');
+        }
+        
+        function addSubject() {
+            if (!checkAdminAccess()) return;
+            
+            const name = document.getElementById('subjectNameInput').value.trim();
+            const code = document.getElementById('subjectCodeInput').value.trim();
+            const description = document.getElementById('subjectDescInput').value.trim();
+            
+            if (!name || !code) {
+                alert('กรุณากรอกชื่อวิชาและรหัสวิชา');
+                return;
+            }
+            
+            if (subjects.find(s => s.code === code)) {
+                alert('รหัสวิชานี้มีอยู่แล้ว');
+                return;
+            }
+            
+            subjects.push({
+                id: Date.now(),
+                name: name,
+                code: code,
+                description: description,
+                createdAt: new Date()
+            });
+            
+            document.getElementById('subjectNameInput').value = '';
+            document.getElementById('subjectCodeInput').value = '';
+            document.getElementById('subjectDescInput').value = '';
+            
+            updateSubjectsList();
+            updateSubjectSelects();
+        }
+        
+        function removeSubject(id) {
+            if (!checkAdminAccess()) return;
+            
+            if (confirm('คุณแน่ใจหรือไม่ที่จะลบวิชานี้? ข้อมูลการเช็คชื่อที่เกี่ยวข้องจะถูกลบด้วย')) {
+                subjects = subjects.filter(s => s.id !== id);
+                attendanceRecords = attendanceRecords.filter(r => r.subjectId !== id);
+                updateSubjectsList();
+                updateSubjectSelects();
+                updateRecordsDisplay();
+            }
+        }
+        
+        function updateSubjectsList() {
+            const container = document.getElementById('subjectsList');
+            if (!container) return;
+            container.innerHTML = '';
+            
+            if (subjects.length === 0) {
+                container.innerHTML = '<div class="empty-state">ยังไม่มีวิชาที่เพิ่ม</div>';
+                return;
+            }
+            
+            subjects.forEach(subject => {
+                const item = document.createElement('div');
+                item.className = 'subject-item';
+                item.innerHTML = `
+                    <div class="subject-info">
+                        <div class="subject-name">${subject.name}</div>
+                        <div class="subject-code">รหัสวิชา: ${subject.code}</div>
+                        ${subject.description ? `<div style="color: #666; font-size: 14px; margin-top: 5px;">${subject.description}</div>` : ''}
+                    </div>
+                    <button class="btn danger small" onclick="removeSubject(${subject.id})">ลบ</button>
+                `;
+                container.appendChild(item);
+            });
+        }
+        
+        function updateSubjectSelects() {
+            const selectSubject = document.getElementById('selectSubject');
+            const recordSubject = document.getElementById('recordSubject');
+            
+            if (selectSubject) {
+                selectSubject.innerHTML = '<option value="">-- เลือกวิชา --</option>';
+                subjects.forEach(subject => {
+                    const option = document.createElement('option');
+                    option.value = subject.id;
+                    option.textContent = `${subject.name} (${subject.code})`;
+                    selectSubject.appendChild(option);
+                });
+            }
+            
+            if (recordSubject) {
+                recordSubject.innerHTML = '<option value="">-- ทุกวิชา --</option>';
+                subjects.forEach(subject => {
+                    const option = document.createElement('option');
+                    option.value = subject.id;
+                    option.textContent = `${subject.name} (${subject.code})`;
+                    recordSubject.appendChild(option);
+                });
+            }
+        }
+        
+        function selectSubject() {
+            if (!checkAdminAccess()) return;
+            
+            const subjectId = document.getElementById('selectSubject').value;
+            if (subjectId) {
+                const subject = subjects.find(s => s.id == subjectId);
+                if (subject) {
+                    currentSubjectId = subject.id;
+                    document.getElementById('selectedSubject').style.display = 'block';
+                    document.getElementById('selectedSubjectName').textContent = subject.name;
+                    document.getElementById('selectedSubjectCode').textContent = `รหัสวิชา: ${subject.code}`;
+                }
+            } else {
+                currentSubjectId = null;
+                document.getElementById('selectedSubject').style.display = 'none';
+            }
+        }
+        
+        function addStudent() {
+            if (!checkAdminAccess()) return;
+            
+            const name = document.getElementById('studentNameInput').value.trim();
+            const number = document.getElementById('studentNumberInput').value.trim();
+            
+            if (!name || !number) {
+                alert('กรุณากรอกชื่อนักศึกษาและรหัสนักศึกษา');
+                return;
+            }
+            
+            if (students.find(s => s.number === number)) {
+                alert('รหัสนักศึกษานี้มีอยู่แล้ว');
+                return;
+            }
+            
+            students.push({
+                id: Date.now(),
+                name: name,
+                number: number,
+                attended: false,
+                checkedInAt: null,
+                sessionId: null
+            });
+            
+            document.getElementById('studentNameInput').value = '';
+            document.getElementById('studentNumberInput').value = '';
+            updateStudentsList();
+            updateStats();
+        }
+        
+        function removeStudent(id) {
+            if (!checkAdminAccess()) return;
+            
+            if (confirm('คุณแน่ใจหรือไม่ที่จะลบนักศึกษาคนนี้?')) {
+                students = students.filter(s => s.id !== id);
+                updateStudentsList();
+                updateStats();
+            }
+        }
+        
+        function updateStudentsList() {
+            const container = document.getElementById('studentsList');
+            if (!container) return;
+            container.innerHTML = '';
+            
+            if (students.length === 0) {
+                container.innerHTML = '<div class="empty-state">ยังไม่มีนักศึกษาที่เพิ่ม</div>';
+                return;
+            }
+            
+            students.forEach(student => {
+                const item = document.createElement('div');
+                item.className = 'student-item';
+                item.innerHTML = `
+                    <div class="student-info">
+                        <div class="student-name">${student.name}</div>
+                        <div class="student-number">รหัส: ${student.number}</div>
+                    </div>
+                    <button class="btn danger small" onclick="removeStudent(${student.id})">ลบ</button>
+                `;
+                container.appendChild(item);
+            });
+        }
+        
+        function updateStats() {
+            const total = students.length;
+            const present = students.filter(s => s.attended).length;
+            const absent = total - present;
+            
+            const totalElement = document.getElementById('totalStudents');
+            const presentElement = document.getElementById('presentCount');
+            const absentElement = document.getElementById('absentCount');
+            
+            if (totalElement) totalElement.textContent = total;
+            if (presentElement) presentElement.textContent = present;
+            if (absentElement) absentElement.textContent = absent;
+        }
+        
+        function updateAttendanceStatus() {
+            const container = document.getElementById('attendanceStatus');
+            if (!container) return;
+            container.innerHTML = '';
+            
+            if (students.length === 0) {
+                container.innerHTML = '<div class="empty-state">ยังไม่มีนักศึกษาที่เพิ่ม</div>';
+                return;
+            }
+            
+            students.forEach(student => {
+                const item = document.createElement('div');
+                item.className = 'student-item';
+                item.innerHTML = `
+                    <span class="student-name">${student.name} (${student.number})</span>
+                    <span class="attendance-status ${student.attended ? 'status-present' : 'status-absent'}">
+                        ${student.attended ? '✅ เข้าเรียน' : '❌ ยังไม่เช็คชื่อ'}
+                        ${student.checkedInAt ? ` (${student.checkedInAt})` : ''}
+                    </span>
+                `;
+                container.appendChild(item);
+            });
+        }
+        
+        function startAttendance() {
+            if (!checkAdminAccess()) return;
+            
+            if (!currentSubjectId) {
+                alert('กรุณาเลือกวิชาก่อนเริ่มเช็คชื่อ');
+                return;
+            }
+            
+            const duration = parseInt(document.getElementById('duration').value);
+            if (!duration || duration < 1) {
+                alert('กรุณาระบุระยะเวลาที่ถูกต้อง');
+                return;
+            }
+            
+            sessionId = 'session_' + Date.now();
+            checkedInStudents.clear();
+            
+            students.forEach(s => {
+                s.attended = false;
+                s.checkedInAt = null;
+                s.sessionId = null;
+            });
+            
+            const subject = subjects.find(s => s.id == currentSubjectId);
+            attendanceSession = {
+                id: sessionId,
+                subjectId: currentSubjectId,
+                subjectName: subject.name,
+                subjectCode: subject.code,
+                startTime: new Date(),
+                duration: duration,
+                active: true
+            };
+            
+            timeLeft = duration * 60;
+            
+            document.getElementById('startBtn').classList.add('hidden');
+            document.getElementById('stopBtn').classList.remove('hidden');
+            document.getElementById('checkinBtn').disabled = false;
+            
+            document.getElementById('currentSubject').style.display = 'block';
+            document.getElementById('subjectName').textContent = subject.name;
+            document.getElementById('subjectCode').textContent = `รหัสวิชา: ${subject.code}`;
+            
+            startTimer();
+            updateStats();
+            updateAttendanceStatus();
+        }
+        
+        function stopAttendance() {
+            if (!checkAdminAccess()) return;
+            
+            if (!attendanceSession) return;
+            
+            const attendanceData = {
+                sessionId: sessionId,
+                subjectId: attendanceSession.subjectId,
+                subjectName: attendanceSession.subjectName,
+                subjectCode: attendanceSession.subjectCode,
+                date: attendanceSession.startTime,
+                duration: attendanceSession.duration,
+                attendanceList: students.filter(s => s.attended).map(s => ({
+                    id: s.id,
+                    name: s.name,
+                    number: s.number,
+                    checkedInAt: s.checkedInAt
+                })),
+                totalStudents: students.length,
+                presentCount: students.filter(s => s.attended).length
+            };
+            
+            attendanceRecords.push(attendanceData);
+            
+            attendanceSession = null;
+            sessionId = null;
+            timeLeft = 0;
+            checkedInStudents.clear();
+            
+            document.getElementById('startBtn').classList.remove('hidden');
+            document.getElementById('stopBtn').classList.add('hidden');
+            document.getElementById('checkinBtn').disabled = true;
+            document.getElementById('currentSubject').style.display = 'none';
+            
+            if (timer) {
+                clearInterval(timer);
+                timer = null;
+            }
+            
+            const adminTimer = document.getElementById('adminTimer');
+            const studentTimer = document.getElementById('timer');
+            if (adminTimer) adminTimer.textContent = '';
+            if (studentTimer) studentTimer.textContent = 'การเช็คชื่อสิ้นสุดแล้ว';
+            
+            updateRecordsDisplay();
+            alert('บันทึกการเช็คชื่อเรียบร้อยแล้ว');
+        }
+        
+        function startTimer() {
+            if (timer) clearInterval(timer);
+            
+            timer = setInterval(() => {
+                if (timeLeft <= 0) {
+                    stopAttendance();
+                    return;
+                }
+                
+                timeLeft--;
+                updateTimerDisplay();
+            }, 1000);
+            
+            updateTimerDisplay();
+        }
+        
+        function updateTimerDisplay() {
+            const minutes = Math.floor(timeLeft / 60);
+            const seconds = timeLeft % 60;
+            const timeString = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            
+            const adminTimer = document.getElementById('adminTimer');
+            const studentTimer = document.getElementById('timer');
+            
+            if (timeLeft > 0) {
+                if (adminTimer) {
+                    adminTimer.textContent = `เวลาคงเหลือ: ${timeString}`;
+                    adminTimer.className = 'timer';
+                }
+                if (studentTimer) {
+                    studentTimer.textContent = `เวลาคงเหลือ: ${timeString}`;
+                    studentTimer.className = 'timer';
+                }
+            } else {
+                if (adminTimer) {
+                    adminTimer.textContent = 'หมดเวลาเช็คชื่อ';
+                    adminTimer.className = 'timer expired';
+                }
+                if (studentTimer) {
+                    studentTimer.textContent = 'หมดเวลาเช็คชื่อ';
+                    studentTimer.className = 'timer expired';
+                }
+            }
+        }
+        
+        function checkIn() {
+            const studentInput = document.getElementById('studentId').value.trim();
+            
+            if (!studentInput) {
+                showMessage('กรุณากรอกชื่อหรือรหัสนักศึกษา', 'error');
+                return;
+            }
+            
+            if (!attendanceSession || !attendanceSession.active || timeLeft <= 0) {
+                showMessage('ไม่อยู่ในช่วงเวลาเช็คชื่อ', 'error');
+                return;
+            }
+            
+            const studentKey = `${studentInput}_${sessionId}`;
+            if (checkedInStudents.has(studentKey)) {
+                showMessage('คุณได้เช็คชื่อในเซสชันนี้แล้ว!', 'warning');
+                return;
+            }
+            
+            const student = students.find(s => 
+                s.name.toLowerCase().includes(studentInput.toLowerCase()) ||
+                s.number.includes(studentInput)
+            );
+            
+            if (!student) {
+                showMessage('ไม่พบชื่อหรือรหัสนักศึกษาในระบบ', 'error');
+                return;
+            }
+            
+            if (student.attended && student.sessionId === sessionId) {
+                showMessage('คุณได้เช็คชื่อในเซสชันนี้แล้ว!', 'warning');
+                return;
+            }
+            
+            student.attended = true;
+            student.checkedInAt = new Date().toLocaleTimeString('th-TH');
+            student.sessionId = sessionId;
+            checkedInStudents.add(studentKey);
+            
+            showMessage(`เช็คชื่อสำเร็จ! สวัสดี ${student.name}`, 'success');
+            updateStats();
+            updateAttendanceStatus();
+            
+            document.getElementById('studentId').value = '';
+        }
+        
+        function showMessage(message, type) {
+            const statusDiv = document.getElementById('statusMessage');
+            statusDiv.innerHTML = `<div class="status-message status-${type}">${message}</div>`;
+            
+            setTimeout(() => {
+                statusDiv.innerHTML = '';
+            }, 4000);
+        }
+        
+        function updateRecordsDisplay() {
+            const container = document.getElementById('attendanceRecords');
+            if (!container) return;
+            container.innerHTML = '';
+            
+            if (attendanceRecords.length === 0) {
+                container.innerHTML = '<div class="empty-state">ยังไม่มีประวัติการเช็คชื่อ</div>';
+                return;
+            }
+            
+            const selectedSubjectId = document.getElementById('recordSubject')?.value;
+            const filteredRecords = selectedSubjectId ? 
+                attendanceRecords.filter(r => r.subjectId == selectedSubjectId) : 
+                attendanceRecords;
+            
+            if (filteredRecords.length === 0) {
+                container.innerHTML = '<div class="empty-state">ไม่มีข้อมูลสำหรับวิชาที่เลือก</div>';
+                return;
+            }
+            
+            filteredRecords.reverse().forEach(record => {
+                const item = document.createElement('div');
+                item.className = 'record-item';
+                item.innerHTML = `
+                    <div class="record-header">
+                        <div class="record-date">${record.date.toLocaleString('th-TH')}</div>
+                        <div style="text-align: right;">
+                            <strong>${record.presentCount}/${record.totalStudents}</strong> เข้าเรียน
+                        </div>
+                    </div>
+                    <div class="record-subject">
+                        📖 ${record.subjectName} (${record.subjectCode})
+                    </div>
+                    <div class="attendance-summary">
+                        <strong>รายชื่อนักศึกษาที่เข้าเรียน:</strong>
+                        ${record.attendanceList.length > 0 ? 
+                            record.attendanceList.map(s => 
+                                `<div class="student-record">
+                                    <span>${s.name} (${s.number})</span>
+                                    <span>${s.checkedInAt}</span>
+                                </div>`
+                            ).join('') :
+                            '<div class="empty-state" style="padding: 10px;">ไม่มีนักศึกษาเข้าเรียน</div>'
+                        }
+                    </div>
+                `;
+                container.appendChild(item);
+            });
+            
+            updateRecordStats();
+        }
+        
+        function updateRecordStats() {
+            const selectedSubjectId = document.getElementById('recordSubject')?.value;
+            const filteredRecords = selectedSubjectId ? 
+                attendanceRecords.filter(r => r.subjectId == selectedSubjectId) : 
+                attendanceRecords;
+            
+            const totalSessions = filteredRecords.length;
+            const avgAttendance = totalSessions > 0 ? 
+                Math.round(filteredRecords.reduce((sum, r) => sum + (r.presentCount / r.totalStudents * 100), 0) / totalSessions) : 0;
+            
+            const totalSessionsElement = document.getElementById('totalSessions');
+            const avgAttendanceElement = document.getElementById('avgAttendance');
+            
+            if (totalSessionsElement) totalSessionsElement.textContent = totalSessions;
+            if (avgAttendanceElement) avgAttendanceElement.textContent = avgAttendance + '%';
+        }
+        
+        function filterRecords() {
+            if (!checkAdminAccess()) return;
+            updateRecordsDisplay();
+        }
+        
+        function exportRecords() {
+            if (!checkAdminAccess()) return;
+            
+            if (attendanceRecords.length === 0) {
+                alert('ไม่มีข้อมูลให้ส่งออก');
+                return;
+            }
+            
+            let csv = 'วันที่,วิชา,รหัสวิชา,จำนวนนักศึกษา,เข้าเรียน,ขาดเรียน,เปอร์เซ็นต์\n';
+            
+            attendanceRecords.forEach(record => {
+                const percentage = Math.round((record.presentCount / record.totalStudents) * 100);
+                csv += `${record.date.toLocaleDateString('th-TH')},${record.subjectName},${record.subjectCode},${record.totalStudents},${record.presentCount},${record.totalStudents - record.presentCount},${percentage}%\n`;
+            });
+            
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+            link.setAttribute('href', url);
+            link.setAttribute('download', 'attendance_records.csv');
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+        
+        function clearAllRecords() {
+            if (!checkAdminAccess()) return;
+            
+            if (confirm('คุณแน่ใจหรือไม่ที่จะลบประวัติการเช็คชื่อทั้งหมด?')) {
+                attendanceRecords = [];
+                updateRecordsDisplay();
+                alert('ลบประวัติทั้งหมดเรียบร้อยแล้ว');
+            }
+        }
+        
+        // Event Listeners
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('studentId').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    checkIn();
+                }
+            });
+            
+            document.getElementById('adminUsername').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    document.getElementById('adminPassword').focus();
+                }
+            });
+            
+            document.getElementById('adminPassword').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    adminLogin();
+                }
+            });
+            
+            // Close admin panel when clicking outside
+            document.getElementById('adminOverlay').addEventListener('click', function(e) {
+                if (e.target === this) {
+                    closeAdminPanel();
+                }
+            });
+            
+            // Load sample data
+            setTimeout(() => {
+                subjects.push(
+                    {
+                        id: 1,
+                        name: 'เขียนโค้ด',
+                        code: 'cs01',
+                        description: '',
+                        createdAt: new Date()
+                    },
+                    {
+                        id: 2,
+                        name: 'ประกอบคอม',
+                        code: 'cs02',
+                        description: 'ภาษาอังกฤษเพื่อการสื่อสาร',
+                        createdAt: new Date()
+                    }
+                );
+                
+                students.push(
+                    {
+                        id: 1,
+                        name: 'ฟี',
+                        number: '100',
+                        attended: false,
+                        checkedInAt: null,
+                        sessionId: null
+                    },
+                    {
+                        id: 2,
+                        name: 'ฟา',
+                        number: '200',
+                        attended: false,
+                        checkedInAt: null,
+                        sessionId: null
+                    },
+                    {
+                        id: 3,
+                        name: 'ฟู',
+                        number: '300',
+                        attended: false,
+                        checkedInAt: null,
+                        sessionId: null
+                    }
+                );
+                
+                updateStats();
+            }, 500);
+        });
+    </script>
+</body>
+</html>
